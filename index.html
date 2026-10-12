@@ -1,0 +1,246 @@
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8fc">
+  <title>이미지 용량 줄이기</title>
+  <meta name="description" content="사진의 용량을 간편하게 줄이고 저장하세요.">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f7f8fc;
+      color: #20243a;
+    }
+    header {
+      padding: 22px 16px;
+      text-align: center;
+      background: white;
+      border-bottom: 1px solid #e8eaf2;
+    }
+    header h1 { margin: 0; font-size: 25px; }
+    header p { color: #687087; font-size: 14px; margin-bottom: 0; }
+    main {
+      width: min(100% - 28px, 560px);
+      margin: 28px auto;
+    }
+    .panel {
+      background: white;
+      border: 1px solid #e4e7f0;
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 8px 28px #20243a0a;
+    }
+    .dropzone {
+      border: 2px dashed #c9cfee;
+      background: #fafaff;
+      border-radius: 14px;
+      padding: 28px 12px;
+      text-align: center;
+    }
+    .photo-icon { font-size: 42px; }
+    .dropzone h2 { font-size: 18px; margin: 10px 0 6px; }
+    .muted { color: #727a91; font-size: 13px; line-height: 1.6; }
+    button, .file-button {
+      display: inline-block;
+      border: 0;
+      border-radius: 11px;
+      background: #5265e9;
+      color: white;
+      padding: 14px 18px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      -webkit-appearance: none;
+    }
+    .file-button { margin-top: 14px; }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .field { margin-top: 22px; }
+    .field label { display: block; font-weight: 700; margin-bottom: 10px; }
+    input[type="range"] { width: 100%; accent-color: #5265e9; }
+    .range-row { display: flex; justify-content: space-between; font-size: 13px; color: #727a91; }
+    .preview {
+      display: none;
+      width: 100%;
+      max-height: 320px;
+      object-fit: contain;
+      margin-top: 20px;
+      border-radius: 12px;
+      background: #f0f1f7;
+    }
+    .status {
+      margin-top: 16px;
+      font-size: 14px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+    .result {
+      display: none;
+      margin-top: 20px;
+      border-radius: 12px;
+      padding: 16px;
+      background: #f0f3ff;
+    }
+    .result p { margin: 7px 0; font-size: 14px; }
+    .actions { display: grid; gap: 10px; margin-top: 16px; }
+    .secondary { background: #e9ecff; color: #3446b5; }
+    footer { text-align: center; color: #8990a3; font-size: 12px; padding: 10px 20px 30px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🖼️ 이미지 용량 줄이기</h1>
+    <p>사진을 간편하게 압축하고 저장하세요.</p>
+  </header>
+  <main>
+    <section class="panel">
+      <div class="dropzone">
+        <div class="photo-icon">📷</div>
+        <h2>사진을 선택하세요</h2>
+        <p class="muted">JPG, PNG, WebP 이미지를 지원합니다.<br>사진은 서버로 업로드되지 않습니다.</p>
+        <label class="file-button" for="fileInput">사진 선택하기</label>
+        <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+      </div>
+  <img id="preview" class="preview" alt="선택한 사진 미리보기">
+  <div class="field">
+    <label for="quality">압축 품질: <span id="qualityText">70%</span></label>
+    <input id="quality" type="range" min="10" max="100" value="70">
+    <div class="range-row"><span>작은 용량</span><span>높은 화질</span></div>
+  </div>
+  <div class="actions">
+    <button id="compressButton" disabled>이미지 용량 줄이기</button>
+  </div>
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+  <section id="result" class="result">
+    <strong>압축 완료!</strong>
+    <p id="originalSize"></p>
+    <p id="compressedSize"></p>
+    <p id="savedSize"></p>
+    <div class="actions">
+      <a id="downloadButton" class="file-button" href="#" download="compressed-image.jpg">압축 이미지 저장하기</a>
+      <button id="resetButton" class="secondary">다른 사진 선택하기</button>
+    </div>
+  </section>
+</section>
+  </main>
+  <footer>간편하고 안전한 이미지 압축 도구</footer>
+  <script>
+    (() => {
+      const fileInput = document.getElementById("fileInput");
+      const quality = document.getElementById("quality");
+      const qualityText = document.getElementById("qualityText");
+      const compressButton = document.getElementById("compressButton");
+      const preview = document.getElementById("preview");
+      const status = document.getElementById("status");
+      const result = document.getElementById("result");
+      const downloadButton = document.getElementById("downloadButton");
+      let selectedFile = null;
+      let previewUrl = null;
+      let downloadUrl = null;
+      function formatSize(bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+        return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+      }
+      function clearUrl(url) {
+        if (url) URL.revokeObjectURL(url);
+      }
+      function resetResult() {
+        result.style.display = "none";
+        clearUrl(downloadUrl);
+        downloadUrl = null;
+        downloadButton.removeAttribute("href");
+      }
+      quality.addEventListener("input", () => {
+        qualityText.textContent = quality.value + "%";
+      });
+      fileInput.addEventListener("change", () => {
+        resetResult();
+        selectedFile = fileInput.files && fileInput.files[0];
+        if (!selectedFile) {
+          compressButton.disabled = true;
+          return;
+        }
+        if (!["image/jpeg", "image/png", "image/webp"].includes(selectedFile.type)) {
+          selectedFile = null;
+          compressButton.disabled = true;
+          status.textContent = "JPG, PNG, WebP 이미지 파일을 선택해 주세요.";
+          return;
+        }
+        clearUrl(previewUrl);
+        previewUrl = URL.createObjectURL(selectedFile);
+        preview.src = previewUrl;
+        preview.style.display = "block";
+        compressButton.disabled = false;
+        status.textContent = "선택한 파일: " + selectedFile.name + " (" + formatSize(selectedFile.size) + ")";
+      });
+      compressButton.addEventListener("click", async () => {
+        if (!selectedFile) {
+          status.textContent = "먼저 사진을 선택해 주세요.";
+          return;
+        }
+        compressButton.disabled = true;
+        status.textContent = "이미지를 압축하고 있습니다...";
+        resetResult();
+        try {
+          const image = new Image();
+          image.src = previewUrl;
+          await new Promise((resolve, reject) => {
+            image.onload = resolve;
+            image.onerror = () => reject(new Error("이미지를 읽을 수 없습니다."));
+          });
+          const maxSide = 2560;
+          const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+          canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+          const context = canvas.getContext("2d");
+          if (!context) throw new Error("이미지 처리 기능을 사용할 수 없습니다.");
+          context.fillStyle = "#ffffff";
+          context.fillRect(0, 0, canvas.width, canvas.height);
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          const blob = await new Promise((resolve, reject) => {
+            canvas.toBlob(
+              value => value ? resolve(value) : reject(new Error("압축에 실패했습니다.")),
+              "image/jpeg",
+              Number(quality.value) / 100
+            );
+          });
+          downloadUrl = URL.createObjectURL(blob);
+          downloadButton.href = downloadUrl;
+          downloadButton.download = "compressed-image.jpg";
+          document.getElementById("originalSize").textContent =
+            "원본 용량: " + formatSize(selectedFile.size);
+          document.getElementById("compressedSize").textContent =
+            "압축 용량: " + formatSize(blob.size);
+          const difference = selectedFile.size - blob.size;
+          document.getElementById("savedSize").textContent =
+            difference > 0
+              ? "절약한 용량: " + formatSize(difference) + " (" + Math.round(difference / selectedFile.size * 100) + "% 감소)"
+              : "이 사진은 용량이 줄지 않았습니다. 품질을 낮춰 다시 시도해 보세요.";
+          result.style.display = "block";
+          status.textContent = "압축이 완료되었습니다.";
+        } catch (error) {
+          status.textContent = error.message || "오류가 발생했습니다. 다른 사진으로 시도해 주세요.";
+        } finally {
+          compressButton.disabled = !selectedFile;
+        }
+      });
+      document.getElementById("resetButton").addEventListener("click", () => {
+        fileInput.value = "";
+        selectedFile = null;
+        clearUrl(previewUrl);
+        previewUrl = null;
+        preview.removeAttribute("src");
+        preview.style.display = "none";
+        resetResult();
+        compressButton.disabled = true;
+        status.textContent = "";
+      });
+    })();
+  </script>
+</body>
+</html></escape>
