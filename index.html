@@ -253,6 +253,17 @@
     <input id="qualityNumber" type="number" min="1" max="100" step="1" value="70">
     <div class="range-row"><span>작은 용량</span><span>높은 화질</span></div>
   </div>
+  <div class="control-group">
+  <label for="targetReduction">목표 용량 감소율 (%)</label>
+  <input
+    id="targetReduction"
+    type="number"
+    min="0"
+    max="95"
+    step="1"
+    value="55"
+  >
+</div>
   <div class="actions">
     <button id="compressButton" disabled>이미지 용량 줄이기</button>
   </div>
@@ -381,7 +392,9 @@ qualityNumber.addEventListener("change", () => {
           context.fillStyle = "#ffffff";
           context.fillRect(0, 0, canvas.width, canvas.height);
           context.drawImage(image, 0, 0, canvas.width, canvas.height);
-          const targetReduction = Number(quality.value);
+          const targetReduction = Number(
+            document.getElementById("targetReduction").value
+            );
           const originalSize = selectedFile.size;
           const targetSize = originalSize * (1 - targetReduction / 100);
           let low = 0.01;
