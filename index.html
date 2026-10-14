@@ -390,6 +390,35 @@ qualityNumber.addEventListener("change", () => {
           let bestDifference = Infinity;
           for (let i = 0; i < 32; i++) {
             const q = (low + high) / 2;
+            
+            const testBlob = await new Promise((resolve, reject) => {
+              canvas.toBlob(
+                value => value
+                  ? resolve(value)
+                  : reject(new Error("압축에 실패했습니다.")),
+                "image/jpeg",
+                q
+              );
+            });
+            
+            const difference = Math.abs(testBlob.size - targetSize);
+            
+            if (difference < bestDifference) {
+              bestDifference = difference;
+              bestBlob = testBlob;
+            }
+            if (difference <= originalSize * 0.005) {
+              break;
+            }
+            
+            if (testBlob.size > targetSize) {
+              high = q;
+            } else {
+              low = q;
+            }
+          }
+          const blob = bestBlob;
+            const q = (low + high) / 2;
             const testBlob = await new Promise((resolve, reject) => {
               canvas.toBlob(
                 value => value
