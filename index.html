@@ -468,7 +468,20 @@ const blob = bestBlob;
               ? "절약한 용량: " + formatSize(difference) + " (" + Math.round(difference / selectedFile.size * 100) + "% 감소)"
               : "이 사진은 용량이 줄지 않았습니다. 품질을 낮춰 다시 시도해 보세요.";
           result.style.display = "block";
-          status.textContent = "압축이 완료되었습니다.";
+          
+          if (
+            previousQuality !== null &&
+            Number(quality.value) !== previousQuality &&
+            blob.size === previousCompressedSize
+          ) {
+            status.textContent =
+              "품질을 조절해도 압축 용량이 변하지 않았습니다. 품질을 더 크게 조정하거나 낮춰서 다시 시도해 주세요.";
+          } else {
+            status.textContent = "압축이 완료되었습니다.";
+          }
+          
+          previousQuality = Number(quality.value);
+          previousCompressedSize = blob.size;
         } catch (error) {
           status.textContent = error.message || "오류가 발생했습니다. 다른 사진으로 시도해 주세요.";
         } finally {
