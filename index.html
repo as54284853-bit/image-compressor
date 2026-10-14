@@ -285,6 +285,8 @@
     (() => {
       const fileInput = document.getElementById("fileInput");
       const quality = document.getElementById("quality");
+      let previousQuality = null;
+      let previousCompressedSize = null;
       const qualityText = document.getElementById("qualityText");
       const qualityNumber = document.getElementById("qualityNumber");
 
