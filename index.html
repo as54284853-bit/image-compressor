@@ -381,13 +381,36 @@ qualityNumber.addEventListener("change", () => {
           context.fillStyle = "#ffffff";
           context.fillRect(0, 0, canvas.width, canvas.height);
           context.drawImage(image, 0, 0, canvas.width, canvas.height);
-          const blob = await new Promise((resolve, reject) => {
-            canvas.toBlob(
-              value => value ? resolve(value) : reject(new Error("압축에 실패했습니다.")),
-              "image/jpeg",
-              Number(quality.value) / 100
-            );
-          });
+          const targetReduction = Number(quality.value);
+const originalSize = selectedFile.size;
+const targetSize = originalSize * (1 - targetReduction / 100);
+let low = 0.01;
+let high = 1;
+let bestBlob = null;
+let bestDifference = Infinity;
+for (let i = 0; i < 8; i++) {
+  const q = (low + high) / 2;
+  const testBlob = await new Promise((resolve, reject) => {
+    canvas.toBlob(
+      value => value
+        ? resolve(value)
+        : reject(new Error("압축에 실패했습니다.")),
+      "image/jpeg",
+      q
+    );
+  });
+  const difference = Math.abs(testBlob.size - targetSize);
+  if (difference < bestDifference) {
+    bestDifference = difference;
+    bestBlob = testBlob;
+  }
+  if (testBlob.size > targetSize) {
+    high = q;
+  } else {
+    low = q;
+  }
+}
+const blob = bestBlob;
           downloadUrl = URL.createObjectURL(blob);
           downloadButton.href = downloadUrl;
           downloadButton.download = "compressed-image.jpg";
