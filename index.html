@@ -388,7 +388,7 @@ qualityNumber.addEventListener("change", () => {
           let high = 1;
           let bestBlob = null;
           let bestDifference = Infinity;
-          for (let i = 0; i < 8; i++) {
+          for (let i = 0; i < 16; i++) {
             const q = (low + high) / 2;
             const testBlob = await new Promise((resolve, reject) => {
               canvas.toBlob(
