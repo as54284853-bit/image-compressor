@@ -282,11 +282,29 @@ quality.addEventListener("input", () => {
 });
 
 qualityNumber.addEventListener("input", () => {
-  let value = Number(qualityNumber.value);
   if (qualityNumber.value === "") return;
+
+  const value = Number(qualityNumber.value);
+
+  if (!Number.isFinite(value)) return;
+
+  if (value >= 10 && value <= 100) {
+    quality.value = value;
+    quality.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+});
+
+qualityNumber.addEventListener("change", () => {
+  let value = Number(qualityNumber.value);
+
+  if (qualityNumber.value === "" || !Number.isFinite(value)) {
+    value = Number(quality.value);
+  }
+
   value = Math.max(10, Math.min(100, value));
-  quality.value = value;
+
   qualityNumber.value = value;
+  quality.value = value;
   quality.dispatchEvent(new Event("input", { bubbles: true }));
 });
       const compressButton = document.getElementById("compressButton");
