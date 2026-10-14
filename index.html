@@ -311,9 +311,13 @@ qualityNumber.addEventListener("input", () => {
         downloadUrl = null;
         downloadButton.removeAttribute("href");
       }
-      quality.addEventListener("input", () => {
+      function updateQualityText() {
         qualityText.textContent = quality.value + "%";
-      });
+      }
+      quality.addEventListener("input", updateQualityText);
+      qualityNumber.addEventListener("input", updateQualityText);
+      
+      updateQualityText();
       fileInput.addEventListener("change", () => {
         resetResult();
         selectedFile = fileInput.files && fileInput.files[0];
